@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace Api.Middlewares;
 
-public class Audit
+public class Audit 
 {
     [JsonPropertyName("evt_time")]
     public DateTime EvtTime { get; set; } = DateTime.UtcNow.AddHours(9);
@@ -37,6 +37,15 @@ public class Audit
 
     [JsonPropertyName("service_code")]
     public string? ServiceCode { get; set; }
+
+    [JsonExtensionData]
+    public Dictionary<string, object> AdditionalData { get; set; } = [];
+
+    public object this[string key]
+    {
+        get => AdditionalData[key];
+        set => AdditionalData[key] = value;
+    }
 }
 
 public class ActionDetailContext

@@ -39,7 +39,7 @@ builder.Services.AddSwaggerGen(options =>
         Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
         Name = "x-api-key",
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Scheme = "ApiKeyScheme"
+        Scheme = "ApiKeyScheme",
     });
 
     options.AddSecurityRequirement(new()
@@ -51,9 +51,8 @@ builder.Services.AddSwaggerGen(options =>
                 {
                     Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
                     Id = "ApiKey"
-                }
-            },
-            new List<string>()
+                },
+            }, []
         },
     });
 });
@@ -87,6 +86,7 @@ var api = app.MapGroup("");
 
 api.MapPost("/", (HttpContext ctx, [FromBody] RootDto dto, Audit audit) =>
 {
+    audit["what"] = "🤣😂😊";
     return Results.Ok(dto);
 })
 .RequireAuthorization(adminPolicy)
