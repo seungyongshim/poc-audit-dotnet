@@ -1,38 +1,10 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
-using Microsoft.Extensions.DependencyInjection;
+using System.Text.Json.Serialization;
 using Serilog.Core;
 using Serilog.Events;
 
 namespace Api.Middlewares;
-
-public class AuditLoggingMidelware(ILogger<Audit> logger) : IMiddleware
-{
-    public async Task InvokeAsync(HttpContext context, RequestDelegate next)
-    {
-        
-        var audit = context.RequestServices.GetRequiredService<Audit>();
-        audit["Method"] = context.Request.Method;
-        audit["Path"] = context.Request.Path;
-        audit["QueryString"] = context.Request.QueryString;
-        audit["StatusCode"] = context.Response.StatusCode;
-
-        try
-        {
-            await next(context);
-        }
-        finally
-        {
-            logger.LogInformation("{@audit}", audit );
-        }
-    }
-
-}
-
-public class Audit : Dictionary<string, object>
-{
- 
-}
 
 public class AuditFormatter : IDestructuringPolicy
 {
@@ -40,6 +12,8 @@ public class AuditFormatter : IDestructuringPolicy
 
     public JsonSerializerOptions options = new()
     {
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         WriteIndented = true
     };
 

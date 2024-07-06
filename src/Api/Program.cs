@@ -1,3 +1,4 @@
+using Api.ExceptionHandlers;
 using Api.Middlewares;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
@@ -12,11 +13,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Host.UseSerilog((ctx, config) =>
 {
-    
-    config.WriteTo.Console(new ExpressionTemplate(
-        "{@p['audit']}\n"));
+    config.WriteTo.Console(new ExpressionTemplate("{@p['audit']}\n"));
     config.Destructure.With<AuditFormatter>();
 });
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
@@ -27,10 +28,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<AuditLoggingMidelware>();
+app.UseExceptionHandler();
 
 app.MapPost("/", (HttpContext ctx, [FromBody] RootDto dto, Audit audit) =>
 {
-    audit["GreatAgain"] = "Yes";
     return Results.Ok(dto);
 })
 .WithName("GetWeatherForecast")
