@@ -24,7 +24,7 @@ public class Audit
 
     [JsonPropertyName("action_detail")]
 
-    public ActionDetailContext? ActionDetail { get; set; }
+    public ActionDetailContext ActionDetail { get; } = new();
 
     [JsonPropertyName("action_result")]
     public string? ActionResult { get; set; }

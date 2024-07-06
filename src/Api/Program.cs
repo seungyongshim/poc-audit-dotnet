@@ -1,4 +1,5 @@
 using Api.ExceptionHandlers;
+using Api.ExtensionMethods;
 using Api.Middlewares;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
@@ -34,6 +35,7 @@ app.MapPost("/", (HttpContext ctx, [FromBody] RootDto dto, Audit audit) =>
 {
     return Results.Ok(dto);
 })
+.WithActionDescription(EnumAction.Search)
 .WithName("GetWeatherForecast")
 .WithOpenApi();
 
