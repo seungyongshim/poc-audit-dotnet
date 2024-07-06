@@ -1,11 +1,11 @@
 using Api.Apikey;
-using Api.EndpointFilters;
 using Api.ExceptionHandlers;
 using Api.ExtensionMethods;
 using Api.Middlewares;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Templates;
 
@@ -70,7 +70,7 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsEnvironment("local"))
 {
     app.UseSwagger();
     app.UseSwaggerUI();
