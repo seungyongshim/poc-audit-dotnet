@@ -5,7 +5,7 @@ namespace Api.Middlewares;
 public class Audit
 {
     [JsonPropertyName("evt_time")]
-    public DateTimeOffset EvtTime { get; set; } = DateTimeOffset.UtcNow;
+    public DateTime EvtTime { get; set; } = DateTime.UtcNow.AddHours(9);
 
     [JsonPropertyName("src_ip")]
     public string? SrcIp { get; set; }
@@ -41,6 +41,43 @@ public class Audit
 
 public class ActionDetailContext
 {
-    public string? Description { get; set; }
-    public string? Detail { get; set; }
+    [JsonPropertyName("privacy_menu")]
+    [JsonConverter(typeof(JsonPrivacyMenuConverter))]
+    public bool? PrivacyMenu { get; set; }
+
+    [JsonPropertyName("dst_username")]
+    public string? DstUsername { get; set; }
+
+    [JsonPropertyName("dst_character")]
+    public string? DstCharacter { get; set; }
+
+    [JsonPropertyName("dst_hostname")]
+    public string? DstHostname { get; set; }
+
+    [JsonPropertyName("command")]
+    public string? Command { get; set; }
+
+    [JsonPropertyName("command_type")]
+    public string? CommandType { get; set; }
+
+    [JsonPropertyName("action_reason")]
+    public string? ActionReason { get; set; }
+
+    [JsonPropertyName("approval_user")]
+    public string? ApprovalUser { get; set; }
+
+    [JsonPropertyName("approval_time")]
+    public DateTime? ApprovalTime { get; set; }
+
+    [JsonPropertyName("file_name")]
+    public string? FileName { get; set; }
+
+    [JsonPropertyName("file_path")]
+    public string? FilePath { get; set; }
+
+    [JsonPropertyName("file_hash")]
+    public string? FileHash { get; set; }
+
+    [JsonPropertyName("file_size")]
+    public double? FileSize { get; set; } // KB
 }
