@@ -4,7 +4,7 @@ namespace Api.ExtensionMethods;
 
 public static class WithActionExtension
 {
-    public static TBuilder WithActionDescription<TBuilder>(this TBuilder builder, EnumAction action, Action<EndpointFilterInvocationContext, ActionDetailContext>? actionDetail = null) where TBuilder : IEndpointConventionBuilder
+    public static TBuilder AddActionDescription<TBuilder>(this TBuilder builder, EnumAction action, Action<EndpointFilterInvocationContext, ActionDetailContext>? actionDetail = null) where TBuilder : IEndpointConventionBuilder
     {
         actionDetail ??= (ctx, audit) =>        {        };
 

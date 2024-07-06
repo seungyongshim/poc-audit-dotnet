@@ -1,6 +1,8 @@
+using Api.EndpointFilters;
 using Api.ExceptionHandlers;
 using Api.ExtensionMethods;
 using Api.Middlewares;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using Serilog.Templates;
@@ -31,11 +33,13 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<AuditLoggingMidelware>();
 app.UseExceptionHandler();
 
-app.MapPost("/", (HttpContext ctx, [FromBody] RootDto dto, Audit audit) =>
+var api = app.MapGroup("").AddEndpointFilter<AuthEndpointFilter>();
+
+api.MapPost("/", (HttpContext ctx, [FromBody] RootDto dto, Audit audit) =>
 {
     return Results.Ok(dto);
 })
-.WithActionDescription(EnumAction.Search)
+.AddActionDescription(EnumAction.Search)
 .WithName("GetWeatherForecast")
 .WithOpenApi();
 
