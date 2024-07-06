@@ -52,5 +52,16 @@ public class AuditFormatter : IDestructuringPolicy
         return arg?.ToString() ?? string.Empty;
     }
 
-    public bool TryDestructure(object value, ILogEventPropertyValueFactory propertyValueFactory, [NotNullWhen(true)] out LogEventPropertyValue? result) => throw new NotImplementedException();
+    public bool TryDestructure(object value, ILogEventPropertyValueFactory propertyValueFactory, [NotNullWhen(true)] out LogEventPropertyValue? result)
+    {
+        if (value is Audit dict)
+        {
+            var json = JsonSerializer.Serialize(dict, options);
+            result = new ScalarValue(json);
+            return true;
+        }
+
+        result = null;
+        return false;
+    }
 }
