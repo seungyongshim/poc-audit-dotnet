@@ -1,9 +1,12 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog.Core;
+using Serilog.Events;
 
 namespace Api.Middlewares;
 
-public class AuditLoggingMidelware : IMiddleware
+public class AuditLoggingMidelware(ILogger<Audit> logger) : IMiddleware
 {
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
@@ -20,10 +23,7 @@ public class AuditLoggingMidelware : IMiddleware
         }
         finally
         {
-            Console.WriteLine(JsonSerializer.Serialize(audit, options: new()
-            {
-                WriteIndented = true
-            }));
+            logger.LogInformation("{@audit}", audit );
         }
     }
 
@@ -32,4 +32,25 @@ public class AuditLoggingMidelware : IMiddleware
 public class Audit : Dictionary<string, object>
 {
  
+}
+
+public class AuditFormatter : IDestructuringPolicy
+{
+    public object? GetFormat(Type? formatType) => this;
+
+    public JsonSerializerOptions options = new()
+    {
+        WriteIndented = true
+    };
+
+    public string Format(string? format, object? arg, IFormatProvider? formatProvider)
+    {
+        if (arg is Audit audit)
+        {
+            return JsonSerializer.Serialize(audit, options);
+        }
+        return arg?.ToString() ?? string.Empty;
+    }
+
+    public bool TryDestructure(object value, ILogEventPropertyValueFactory propertyValueFactory, [NotNullWhen(true)] out LogEventPropertyValue? result) => throw new NotImplementedException();
 }
