@@ -28,7 +28,8 @@ var userPolicy = new AuthorizationPolicyBuilder()
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.ClearProviders();
-builder.Services.AddSingleton<AuditLoggingMidelware>();
+builder.Services.AddSingleton<AuditLoggingMiddleware>();
+builder.Services.AddSingleton<ErrorResponseMiddleware>();
 builder.Services.AddScoped<Audit>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -63,7 +64,12 @@ builder.Host.UseSerilog((ctx, config) =>
     config.Destructure.With<AuditFormatter>();
 });
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-builder.Services.AddProblemDetails();
+builder.Services.AddProblemDetails(options =>
+    options.CustomizeProblemDetails = ctx =>
+    {
+        ctx.ProblemDetails.Extensions.Add("trace-id", ctx.HttpContext.TraceIdentifier);
+        ctx.ProblemDetails.Extensions.Add("instance", $"{ctx.HttpContext.Request.Method} {ctx.HttpContext.Request.Path}");
+    });
 builder.Services.AddAuthentication("ApiKey")
                 .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthHandler>("ApiKey", null);
 builder.Services.AddAuthorization();
@@ -76,9 +82,9 @@ if (app.Environment.IsEnvironment("local"))
     app.UseSwaggerUI();
 }
 
-app.UseMiddleware<AuditLoggingMidelware>();
+app.UseStatusCodePages();
+app.UseMiddleware<AuditLoggingMiddleware>();
 app.UseExceptionHandler();
-
 app.UseAuthentication();
 app.UseAuthorization();
 

@@ -1,8 +1,7 @@
 using System.Net;
 
 namespace Api.Middlewares;
-
-public class AuditLoggingMidelware(ILogger<Audit> logger) : IMiddleware
+public class AuditLoggingMiddleware(ILogger<Audit> logger) : IMiddleware
 {
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
