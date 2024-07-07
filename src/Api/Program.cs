@@ -1,18 +1,25 @@
+using System.Diagnostics;
 using Api.Apikey;
 using Api.ExceptionHandlers;
 using Api.ExtensionMethods;
 using Api.Middlewares;
+using FluentValidation;
+using FluentValidation.AspNetCore.Http.ResultsFactory;
+using FluentValidation.AspNetCore.Http;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Templates;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 
 var apikeys = new ApiKeyStore()
 {
-    ["key1"] = ["Admin", "User"],
-    ["key2"] = ["User"],
+    ["1"] = ["Admin", "User"],
+    ["2"] = ["User"],
 };
 
 var adminPolicy = new AuthorizationPolicyBuilder()
@@ -28,6 +35,12 @@ var userPolicy = new AuthorizationPolicyBuilder()
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.ClearProviders();
+builder.Services.AddOpenTelemetry()
+    .WithTracing(x  => x.AddAspNetCoreInstrumentation()
+    .AddOtlpExporter());
+builder.AddFluentValidationEndpointFilter();
+builder.Services.AddSingleton<IFluentValidationEndpointFilterResultsFactory, SimpleResultsFactory>();
+builder.Services.AddSingleton<IValidator<RootDto>, RootDtoValidator>();
 builder.Services.AddSingleton<AuditLoggingMiddleware>();
 builder.Services.AddSingleton<ErrorResponseMiddleware>();
 builder.Services.AddScoped<Audit>();
@@ -67,8 +80,8 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails(options =>
     options.CustomizeProblemDetails = ctx =>
     {
-        ctx.ProblemDetails.Extensions.Add("trace-id", ctx.HttpContext.TraceIdentifier);
-        ctx.ProblemDetails.Extensions.Add("instance", $"{ctx.HttpContext.Request.Method} {ctx.HttpContext.Request.Path}");
+        ctx.ProblemDetails.Extensions.Add("trace-id", $"{Activity.Current?.Id}");
+        ctx.ProblemDetails.Extensions.Add("request-id", Activity.Current?.RootId);
     });
 builder.Services.AddAuthentication("ApiKey")
                 .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthHandler>("ApiKey", null);
@@ -88,12 +101,18 @@ app.UseExceptionHandler();
 app.UseAuthentication();
 app.UseAuthorization();
 
-var api = app.MapGroup("");
+var api = app.MapGroup("").AddFluentValidationFilter();
+
+api.MapGet("/", (HttpContext ctx, Audit audit) =>
+{
+    audit["what"] = "🤣😂😊";
+    throw new Exception("This is a test exception");
+});
 
 api.MapPost("/", (HttpContext ctx, [FromBody] RootDto dto, Audit audit) =>
 {
     audit["what"] = "🤣😂😊";
-    return Results.Ok(dto);
+    return TypedResults.Ok(dto);
 })
 .RequireAuthorization(adminPolicy)
 .AddActionDescription(EnumAction.Search)
