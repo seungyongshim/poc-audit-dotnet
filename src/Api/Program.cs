@@ -45,6 +45,7 @@ builder.Services.AddSingleton<AuditLoggingMiddleware>();
 builder.Services.AddSingleton<ErrorResponseMiddleware>();
 builder.Services.AddScoped<Audit>();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen(options =>
 {
     options.AddSecurityDefinition("ApiKey", new()
@@ -80,14 +81,16 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails(options =>
     options.CustomizeProblemDetails = ctx =>
     {
-        ctx.ProblemDetails.Extensions.Add("trace-id", $"{Activity.Current?.Id}");
-        ctx.ProblemDetails.Extensions.Add("request-id", Activity.Current?.RootId);
+        ctx.ProblemDetails.Extensions.Add("traceId", $"{Activity.Current?.Id}");
+        ctx.ProblemDetails.Extensions.Add("requestId", Activity.Current?.RootId);
     });
 builder.Services.AddAuthentication("ApiKey")
                 .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthHandler>("ApiKey", null);
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+app.MapOpenApi();
 
 if (app.Environment.IsEnvironment("local"))
 {
